@@ -2,43 +2,46 @@ import java.util.*;
 
 
 
-class CancellationService {
+class BookingProcessor {
 
-    private Map<String, String> reservationRoomMap = new HashMap<>();
     private Map<String, Integer> inventory = new HashMap<>();
-    private Stack<String> rollbackStack = new Stack<>();
 
-    CancellationService() {
-
+    BookingProcessor() {
         inventory.put("DELUXE", 1);
         inventory.put("SUITE", 1);
-        inventory.put("STANDARD", 2);
-
-        reservationRoomMap.put("R101", "DELUXE");
-        reservationRoomMap.put("R102", "SUITE");
     }
 
-    void cancelBooking(String reservationId) {
+    public synchronized void bookRoom(String guest, String roomType) {
 
-        if (!reservationRoomMap.containsKey(reservationId)) {
-            System.out.println("Cancellation Failed : Reservation Not Found");
-            return;
+        int available = inventory.getOrDefault(roomType, 0);
+
+        if (available > 0) {
+
+            System.out.println(guest + " successfully booked " + roomType);
+
+            inventory.put(roomType, available - 1);
+
+        } else {
+
+            System.out.println(guest + " failed to book " + roomType + " (Not Available)");
         }
+    }
+}
 
-        String roomType = reservationRoomMap.get(reservationId);
+class GuestThread extends Thread {
 
-        rollbackStack.push(reservationId);
+    private BookingProcessor processor;
+    private String guestName;
+    private String roomType;
 
-        inventory.put(roomType, inventory.get(roomType) + 1);
-
-        reservationRoomMap.remove(reservationId);
-
-        System.out.println("Booking Cancelled Successfully");
-        System.out.println("Inventory Restored for " + roomType);
+    GuestThread(BookingProcessor processor, String guestName, String roomType) {
+        this.processor = processor;
+        this.guestName = guestName;
+        this.roomType = roomType;
     }
 
-    void showRollbackStack() {
-        System.out.println("Rollback Stack : " + rollbackStack);
+    public void run() {
+        processor.bookRoom(guestName, roomType);
     }
 }
 
@@ -46,13 +49,14 @@ public class HotelBookingApp {
 
     public static void main(String[] args) {
 
-        Scanner sc = new Scanner(System.in);
-        CancellationService service = new CancellationService();
+        BookingProcessor processor = new BookingProcessor();
 
-        System.out.print("Enter Reservation ID to Cancel : ");
-        String id = sc.nextLine();
+        Thread g1 = new GuestThread(processor, "Ayan", "DELUXE");
+        Thread g2 = new GuestThread(processor, "Meera", "DELUXE");
+        Thread g3 = new GuestThread(processor, "Rahul", "SUITE");
 
-        service.cancelBooking(id);
-        service.showRollbackStack();
+        g1.start();
+        g2.start();
+        g3.start();
     }
 }
