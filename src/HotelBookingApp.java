@@ -1,11 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Use Case 4 – Room Search & Availability Check
- * Read-only search using centralized inventory
- * @version 4.1
- */
+
 
 abstract class Room {
 
