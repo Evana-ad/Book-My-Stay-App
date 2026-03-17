@@ -1,8 +1,6 @@
 import java.util.*;
 
-/* Use Case 9 – Error Handling & Validation
-   Demonstrates validation + custom exception
-   version 9.0 */
+
 
 class InvalidBookingException extends Exception {
 
