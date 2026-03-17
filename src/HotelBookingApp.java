@@ -1,47 +1,54 @@
+import java.io.*;
 import java.util.*;
 
 
 
-class BookingProcessor {
+class SystemState implements Serializable {
 
-    private Map<String, Integer> inventory = new HashMap<>();
+    Map<String, Integer> inventory;
+    List<String> bookingHistory;
 
-    BookingProcessor() {
-        inventory.put("DELUXE", 1);
-        inventory.put("SUITE", 1);
-    }
-
-    public synchronized void bookRoom(String guest, String roomType) {
-
-        int available = inventory.getOrDefault(roomType, 0);
-
-        if (available > 0) {
-
-            System.out.println(guest + " successfully booked " + roomType);
-
-            inventory.put(roomType, available - 1);
-
-        } else {
-
-            System.out.println(guest + " failed to book " + roomType + " (Not Available)");
-        }
+    SystemState(Map<String, Integer> inventory, List<String> bookingHistory) {
+        this.inventory = inventory;
+        this.bookingHistory = bookingHistory;
     }
 }
 
-class GuestThread extends Thread {
+class PersistenceService {
 
-    private BookingProcessor processor;
-    private String guestName;
-    private String roomType;
+    private static final String FILE_NAME = "system_state.dat";
 
-    GuestThread(BookingProcessor processor, String guestName, String roomType) {
-        this.processor = processor;
-        this.guestName = guestName;
-        this.roomType = roomType;
+    void save(SystemState state) {
+
+        try (ObjectOutputStream out =
+                     new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+
+            out.writeObject(state);
+            System.out.println("System state saved.");
+
+        } catch (Exception e) {
+            System.out.println("Error saving state.");
+        }
     }
 
-    public void run() {
-        processor.bookRoom(guestName, roomType);
+    SystemState load() {
+
+        try (ObjectInputStream in =
+                     new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+
+            System.out.println("System state restored.");
+            return (SystemState) in.readObject();
+
+        } catch (Exception e) {
+
+            System.out.println("No previous state found. Starting fresh.");
+
+            Map<String, Integer> inv = new HashMap<>();
+            inv.put("DELUXE", 2);
+            inv.put("SUITE", 1);
+
+            return new SystemState(inv, new ArrayList<>());
+        }
     }
 }
 
@@ -49,14 +56,18 @@ public class HotelBookingApp {
 
     public static void main(String[] args) {
 
-        BookingProcessor processor = new BookingProcessor();
+        PersistenceService service = new PersistenceService();
 
-        Thread g1 = new GuestThread(processor, "Ayan", "DELUXE");
-        Thread g2 = new GuestThread(processor, "Meera", "DELUXE");
-        Thread g3 = new GuestThread(processor, "Rahul", "SUITE");
+        SystemState state = service.load();
 
-        g1.start();
-        g2.start();
-        g3.start();
+        state.bookingHistory.add("R101-DELUXE");
+
+        state.inventory.put("DELUXE",
+                state.inventory.get("DELUXE") - 1);
+
+        System.out.println("Current Inventory : " + state.inventory);
+        System.out.println("Booking History : " + state.bookingHistory);
+
+        service.save(state);
     }
 }
