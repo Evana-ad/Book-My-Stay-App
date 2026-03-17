@@ -1,22 +1,40 @@
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.*;
+/**
+ * Use Case 3 – Centralized Room Inventory Management
+ * Demonstrates HashMap based inventory
+ * @version 3.1
+ */
 
-class Room {
+class RoomInventory {
 
-    int roomNumber;
-    String type;
-    boolean available;
+    private Map<String, Integer> availability;
 
-    Room(int roomNumber, String type, boolean available) {
-        this.roomNumber = roomNumber;
-        this.type = type;
-        this.available = available;
+    RoomInventory() {
+
+        availability = new HashMap<>();
+
+        availability.put("Single Room", 5);
+        availability.put("Double Room", 3);
+        availability.put("Suite Room", 2);
     }
 
-    void displayRoom() {
-        System.out.println("Room No: " + roomNumber +
-                " | Type: " + type +
-                " | Available: " + available);
+    int getAvailability(String type) {
+        return availability.get(type);
+    }
+
+    void updateAvailability(String type, int count) {
+        availability.put(type, count);
+    }
+
+    void displayInventory() {
+
+        System.out.println("===== Centralized Room Inventory v3.1 =====");
+
+        for (String type : availability.keySet()) {
+            System.out.println(type + " Available : " + availability.get(type));
+        }
     }
 }
 
@@ -24,14 +42,8 @@ public class HotelBookingApp {
 
     public static void main(String[] args) {
 
-        Room r1 = new Room(101, "AC", true);
-        Room r2 = new Room(102, "NON-AC", false);
-        Room r3 = new Room(103, "DELUXE", true);
+        RoomInventory inventory = new RoomInventory();
 
-        r1.displayRoom();
-        r2.displayRoom();
-        r3.displayRoom();
-
+        inventory.displayInventory();
     }
 }
-
